@@ -20,3 +20,28 @@ HBITMAP CreateGraphicalBitmap(HDC hdc, int width, int height)
 
 	return hbitmapCompatible;
 }
+
+void ComplexMapper::FitViewPort()
+{
+	double horizontalScale = (lrOriginal.real() - ulOriginal.real()) / width;
+	double verticalScale = (lrOriginal.imag() - ulOriginal.imag()) / height;
+	Complex viewPortMidPoint = (lrOriginal + ulOriginal) / 2.0;
+
+	if (horizontalScale > verticalScale)
+	{
+		ulPaint = Complex(ulOriginal.real(), viewPortMidPoint.imag() + (ulOriginal.imag() - viewPortMidPoint.imag()) * horizontalScale / verticalScale);
+		lrPaint = Complex(lrOriginal.real(), viewPortMidPoint.imag() + (lrOriginal.imag() - viewPortMidPoint.imag()) * horizontalScale / verticalScale);
+	}
+	else
+	{
+		ulPaint = Complex(viewPortMidPoint.real() + (ulOriginal.real() - viewPortMidPoint.real()) * verticalScale / horizontalScale, ulOriginal.imag());
+		lrPaint = Complex(viewPortMidPoint.real() + (lrOriginal.real() - viewPortMidPoint.real()) * verticalScale / horizontalScale, lrOriginal.imag());
+	}
+}
+
+Complex ComplexMapper::Map(int x, int y)
+{
+	double realPart = ulPaint.real() + x * (lrPaint.real() - ulPaint.real()) / width;
+	double imagPart = ulPaint.imag() + y * (lrPaint.imag() - ulPaint.imag()) / height;
+	return Complex(realPart, imagPart);
+}

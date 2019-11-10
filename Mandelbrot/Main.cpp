@@ -12,6 +12,9 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HBITMAP displayBitmap = NULL;
+Complex ulCurrent = Complex(-2.0, 2.0);
+Complex lrCurrent = Complex(2.0, -2.0);
+ComplexMapper mapper(ulCurrent, lrCurrent, 100, 100);
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -129,16 +132,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 	case WM_SIZE:
 		{
-			if (!displayBitmap)
-			{
-				int width = LOWORD(lParam);
-				int height = HIWORD(lParam);
-				HDC hdc = GetDC(hWnd);
-				if (hdc)
-				{
-					displayBitmap = CreateGraphicalBitmap(hdc, width, height);
-				}
-			}
+			int width = LOWORD(lParam);
+			int height = HIWORD(lParam);
+			mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
 		}
 		break;
     case WM_COMMAND:
@@ -170,6 +166,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				for (int y = 0; y < cyHeight; y += dyStep)
 				{
+					Complex point = mapper.Map(x, y);
 					Rectangle(hdc, x, y, x + dxStep, y + dyStep);
 				}
 			}
