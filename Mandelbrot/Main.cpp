@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "Main.h"
+#include "Graphics.h"
 
 #define MAX_LOADSTRING 100
 
@@ -10,6 +11,7 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HBITMAP displayBitmap = NULL;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -127,8 +129,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 	case WM_SIZE:
 		{
-			int width = LOWORD(lParam);
-			int height = HIWORD(lParam);
+			if (!displayBitmap)
+			{
+				int width = LOWORD(lParam);
+				int height = HIWORD(lParam);
+				HDC hdc = GetDC(hWnd);
+				if (hdc)
+				{
+					displayBitmap = CreateGraphicalBitmap(hdc, width, height);
+				}
+			}
 		}
 		break;
     case WM_COMMAND:
@@ -152,6 +162,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
+			int cxWidth = ps.rcPaint.right - ps.rcPaint.left;
+			int dxStep = cxWidth/10;
+			int cyHeight = ps.rcPaint.bottom - ps.rcPaint.top;
+			int dyStep = cyHeight / 10;
+			for (int x = 0; x < cxWidth; x += dxStep)
+			{
+				for (int y = 0; y < cyHeight; y += dyStep)
+				{
+					Rectangle(hdc, x, y, x + dxStep, y + dyStep);
+				}
+			}
             // TODO: Add any drawing code that uses hdc here...
             EndPaint(hWnd, &ps);
         }
