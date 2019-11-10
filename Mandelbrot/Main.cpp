@@ -167,6 +167,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				for (int y = 0; y < cyHeight; y += dyStep)
 				{
 					Complex point = mapper.Map(x, y);
+					
 					Rectangle(hdc, x, y, x + dxStep, y + dyStep);
 				}
 			}

@@ -7,6 +7,8 @@
 #include <complex>
 using Complex = std::complex<double>;
 
+#include <vector>
+
 HBITMAP CreateGraphicalBitmap(HDC hdc, int width, int height);
 
 class ComplexMapper
@@ -32,4 +34,17 @@ private:
 	Complex lrPaint;
 	int width;
 	int height;
+};
+
+class ColorMapper
+{
+public:
+	ColorMapper();
+	COLORREF Map(int index)
+	{
+		return map.at(index);
+	}
+
+private:
+	std::vector<COLORREF> map;
 };

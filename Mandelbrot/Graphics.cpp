@@ -45,3 +45,23 @@ Complex ComplexMapper::Map(int x, int y)
 	double imagPart = ulPaint.imag() + y * (lrPaint.imag() - ulPaint.imag()) / height;
 	return Complex(realPart, imagPart);
 }
+
+COLORREF InterpolateColors(COLORREF coMin, COLORREF coMax, int num, int den)
+{
+	int red = GetRValue(coMin) + num * (GetRValue(coMax) - GetRValue(coMin)) / den;
+	int blue = GetBValue(coMin) + num * (GetBValue(coMax) - GetBValue(coMin)) / den;
+	int green = GetGValue(coMin) + num * (GetGValue(coMax) - GetGValue(coMin)) / den;
+	return RGB(red, blue, green);
+}
+
+ColorMapper::ColorMapper()
+{
+	COLORREF coMin = RGB(200, 20, 0);
+	COLORREF coMax = RGB(150, 150, 0);
+
+	for (int iter = 0; iter < 256; iter++)
+	{
+		COLORREF co = InterpolateColors(coMin, coMax, iter, 256);
+		map.push_back(co);
+	}
+}
