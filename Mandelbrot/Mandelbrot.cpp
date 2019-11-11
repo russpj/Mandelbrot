@@ -14,11 +14,11 @@ int ValueCircle(Complex point)
 	return mapValue;
 }
 
-int ValueMandelbrot(Complex point)
+int ValueMandelbrot(Complex point, int levels)
 {
 	int count = 0;
 	auto z = point; // First iteration
-	while (abs(z) < 2.0 && count < 255)
+	while (abs(z) < 2.0 && count < levels-1)
 	{
 		count++;
 		z = z*z + point;
@@ -28,5 +28,5 @@ int ValueMandelbrot(Complex point)
 
 COLORREF Calculator::MapPoint(Complex point)
 {
-	return comap.Map(ValueMandelbrot(point));
+	return comap.Map(ValueMandelbrot(point, comap.size()));
 }

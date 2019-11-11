@@ -40,6 +40,12 @@ class ColorMapper
 {
 public:
 	ColorMapper(COLORREF coMin, COLORREF coMax, COLORREF coSpecial, int levels);
+
+	size_t size()
+	{
+		return map.size();
+	}
+
 	COLORREF Map(int index)
 	{
 		return map.at(index);

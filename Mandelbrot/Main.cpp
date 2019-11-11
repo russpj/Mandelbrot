@@ -164,7 +164,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			int dxStep = cxWidth/numSteps;
 			int cyHeight = ps.rcPaint.bottom - ps.rcPaint.top;
 			int dyStep = cyHeight / numSteps;
-			ColorMapper comap(RGB(200, 20, 0), RGB(255, 150, 0), RGB(0, 0, 0), 256);
+			ColorMapper comap(RGB(100, 20, 0), RGB(255, 190, 0), RGB(0, 0, 0), 512);
 			Calculator calc(comap);
 
 			SelectObject(hdc, GetStockObject(NULL_PEN));

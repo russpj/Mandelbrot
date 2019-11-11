@@ -56,9 +56,6 @@ COLORREF InterpolateColors(COLORREF coMin, COLORREF coMax, int num, int den)
 
 ColorMapper::ColorMapper(COLORREF coMin, COLORREF coMax, COLORREF coLast, int levels)
 {
-	// COLORREF coMin = RGB(200, 20, 0);
-	// COLORREF coMax = RGB(255, 150, 0);
-
 	for (int iter = 0; iter < levels-1; iter++)
 	{
 		COLORREF co = InterpolateColors(coMin, coMax, iter, levels);
