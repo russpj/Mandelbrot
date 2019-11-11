@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "Main.h"
 #include "Graphics.h"
+#include "Mandelbrot.h"
 
 #define MAX_LOADSTRING 100
 
@@ -12,8 +13,8 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HBITMAP displayBitmap = NULL;
-Complex ulCurrent = Complex(-2.0, 2.0);
-Complex lrCurrent = Complex(2.0, -2.0);
+Complex ulCurrent = Complex(0.0, 2.0);
+Complex lrCurrent = Complex(2.0, 0.0);
 ComplexMapper mapper(ulCurrent, lrCurrent, 100, 100);
 
 // Forward declarations of functions included in this code module:
@@ -159,16 +160,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
 			int cxWidth = ps.rcPaint.right - ps.rcPaint.left;
-			int dxStep = cxWidth/10;
+			int numSteps = 100;
+			int dxStep = cxWidth/numSteps;
 			int cyHeight = ps.rcPaint.bottom - ps.rcPaint.top;
-			int dyStep = cyHeight / 10;
+			int dyStep = cyHeight / numSteps;
+			Calculator calc;
+
+			SelectObject(hdc, GetStockObject(NULL_PEN));
+
 			for (int x = 0; x < cxWidth; x += dxStep)
 			{
 				for (int y = 0; y < cyHeight; y += dyStep)
 				{
-					Complex point = mapper.Map(x, y);
-					
-					Rectangle(hdc, x, y, x + dxStep, y + dyStep);
+					auto point = mapper.Map(x, y);
+					auto co = calc.MapPoint(point);
+					auto brush = CreateSolidBrush(co);
+					if (brush)
+					{
+						auto old = SelectObject(hdc, brush);
+						Rectangle(hdc, x, y, x + dxStep+1, y + dyStep+1);
+						SelectObject(hdc, old);
+						DeleteObject(brush);
+					}
 				}
 			}
             // TODO: Add any drawing code that uses hdc here...

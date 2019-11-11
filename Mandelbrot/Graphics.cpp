@@ -48,16 +48,16 @@ Complex ComplexMapper::Map(int x, int y)
 
 COLORREF InterpolateColors(COLORREF coMin, COLORREF coMax, int num, int den)
 {
-	int red = GetRValue(coMin) + num * (GetRValue(coMax) - GetRValue(coMin)) / den;
-	int blue = GetBValue(coMin) + num * (GetBValue(coMax) - GetBValue(coMin)) / den;
-	int green = GetGValue(coMin) + num * (GetGValue(coMax) - GetGValue(coMin)) / den;
-	return RGB(red, blue, green);
+	auto red = GetRValue(coMin) + num * (GetRValue(coMax) - GetRValue(coMin)) / den;
+	auto green = GetGValue(coMin) + num * (GetGValue(coMax) - GetGValue(coMin)) / den;
+	auto blue = GetBValue(coMin) + num * (GetBValue(coMax) - GetBValue(coMin)) / den;
+	return RGB(red, green, blue);
 }
 
 ColorMapper::ColorMapper()
 {
 	COLORREF coMin = RGB(200, 20, 0);
-	COLORREF coMax = RGB(150, 150, 0);
+	COLORREF coMax = RGB(200, 150, 0);
 
 	for (int iter = 0; iter < 256; iter++)
 	{
