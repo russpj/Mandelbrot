@@ -24,7 +24,7 @@ HBITMAP CreateGraphicalBitmap(HDC hdc, int width, int height)
 void ComplexMapper::FitViewPort()
 {
 	double horizontalScale = (lrOriginal.real() - ulOriginal.real()) / width;
-	double verticalScale = (lrOriginal.imag() - ulOriginal.imag()) / height;
+	double verticalScale = (ulOriginal.imag() - lrOriginal.imag()) / height;
 	Complex viewPortMidPoint = (lrOriginal + ulOriginal) / 2.0;
 
 	if (horizontalScale > verticalScale)
@@ -54,14 +54,16 @@ COLORREF InterpolateColors(COLORREF coMin, COLORREF coMax, int num, int den)
 	return RGB(red, green, blue);
 }
 
-ColorMapper::ColorMapper()
+ColorMapper::ColorMapper(COLORREF coMin, COLORREF coMax, COLORREF coLast, int levels)
 {
-	COLORREF coMin = RGB(200, 20, 0);
-	COLORREF coMax = RGB(200, 150, 0);
+	// COLORREF coMin = RGB(200, 20, 0);
+	// COLORREF coMax = RGB(255, 150, 0);
 
-	for (int iter = 0; iter < 256; iter++)
+	for (int iter = 0; iter < levels-1; iter++)
 	{
-		COLORREF co = InterpolateColors(coMin, coMax, iter, 256);
+		COLORREF co = InterpolateColors(coMin, coMax, iter, levels);
 		map.push_back(co);
 	}
+	map.push_back(RGB(0, 0, 0));
 }
+

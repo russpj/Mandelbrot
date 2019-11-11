@@ -6,6 +6,11 @@
 class Calculator
 {
 public:
+	Calculator(ColorMapper map) :
+		comap(map)
+	{
+	}
+
 	COLORREF MapPoint(Complex(point));
 
 private:

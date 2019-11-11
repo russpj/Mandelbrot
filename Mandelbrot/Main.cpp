@@ -13,8 +13,8 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HBITMAP displayBitmap = NULL;
-Complex ulCurrent = Complex(0.0, 2.0);
-Complex lrCurrent = Complex(2.0, 0.0);
+Complex ulCurrent = Complex(-2.0, 2.0);
+Complex lrCurrent = Complex(2.0, -2.0);
 ComplexMapper mapper(ulCurrent, lrCurrent, 100, 100);
 
 // Forward declarations of functions included in this code module:
@@ -160,11 +160,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
 			int cxWidth = ps.rcPaint.right - ps.rcPaint.left;
-			int numSteps = 100;
+			int numSteps = 300;
 			int dxStep = cxWidth/numSteps;
 			int cyHeight = ps.rcPaint.bottom - ps.rcPaint.top;
 			int dyStep = cyHeight / numSteps;
-			Calculator calc;
+			ColorMapper comap(RGB(200, 20, 0), RGB(255, 150, 0), RGB(0, 0, 0), 256);
+			Calculator calc(comap);
 
 			SelectObject(hdc, GetStockObject(NULL_PEN));
 

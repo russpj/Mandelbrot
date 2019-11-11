@@ -39,7 +39,7 @@ private:
 class ColorMapper
 {
 public:
-	ColorMapper();
+	ColorMapper(COLORREF coMin, COLORREF coMax, COLORREF coSpecial, int levels);
 	COLORREF Map(int index)
 	{
 		return map.at(index);
