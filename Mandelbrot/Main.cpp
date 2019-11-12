@@ -13,8 +13,8 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HBITMAP displayBitmap = NULL;
-Complex ulCurrent = Complex(-2.0, 2.0);
-Complex lrCurrent = Complex(2.0, -2.0);
+Complex ulCurrent = Complex(-2.1, 1.2);
+Complex lrCurrent = Complex(0.5, -1.2);
 ComplexMapper mapper(ulCurrent, lrCurrent, 100, 100);
 
 // Forward declarations of functions included in this code module:
@@ -160,12 +160,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
 			int cxWidth = ps.rcPaint.right - ps.rcPaint.left;
-			int numSteps = 300;
+			int numSteps = 60;
 			int dxStep = cxWidth/numSteps;
 			int cyHeight = ps.rcPaint.bottom - ps.rcPaint.top;
 			int dyStep = cyHeight / numSteps;
 			ColorMapper comap(RGB(100, 20, 0), RGB(255, 190, 0), RGB(0, 0, 0), 512);
-			Calculator calc(comap);
+			Calculator calc(comap, mapper);
 
 			SelectObject(hdc, GetStockObject(NULL_PEN));
 
@@ -173,8 +173,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				for (int y = 0; y < cyHeight; y += dyStep)
 				{
-					auto point = mapper.Map(x, y);
-					auto co = calc.MapPoint(point);
+					auto co = calc.MapPoint(x, y);
 					auto brush = CreateSolidBrush(co);
 					if (brush)
 					{

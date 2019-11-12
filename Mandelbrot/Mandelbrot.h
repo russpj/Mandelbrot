@@ -6,15 +6,16 @@
 class Calculator
 {
 public:
-	Calculator(ColorMapper map) :
-		comap(map)
+	Calculator(ColorMapper comapIn, ComplexMapper ptmapIn) :
+		comap(comapIn), pointMapLowRes(ptmapIn)
 	{
 	}
 
-	COLORREF MapPoint(Complex(point));
+	COLORREF MapPoint(int x, int y);
 
 private:
 	ColorMapper comap;
+	ComplexMapper pointMapLowRes;
 };
 
 
