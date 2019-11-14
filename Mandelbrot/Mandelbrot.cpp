@@ -31,3 +31,4 @@ COLORREF Calculator::MapPoint(int x, int y)
 	auto point = pointMapLowRes.Map(x, y);
 	return comap.Map(ValueMandelbrot(point, comap.size()));
 }
+

@@ -158,51 +158,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
+			const int dxSlice = 5;
             HDC hdc = BeginPaint(hWnd, &ps);
-			int cxWidth = ps.rcPaint.right - ps.rcPaint.left;
-			int numSteps = 60;
-			int dxStep = cxWidth/numSteps;
-			int cyHeight = ps.rcPaint.bottom - ps.rcPaint.top;
-			int dyStep = cyHeight / numSteps;
 			ColorMapper comap(RGB(100, 20, 0), RGB(255, 190, 0), RGB(0, 0, 0), 512);
 			Calculator calc(comap, mapper);
 
-			SelectObject(hdc, GetStockObject(NULL_PEN));
+			int xMax = min(ps.rcPaint.left + dxSlice, ps.rcPaint.right);
+			for (int x = ps.rcPaint.left; x < xMax; x++)
+			{
+				for (int y = ps.rcPaint.top; y < ps.rcPaint.bottom; y++)
+				{
+					auto co = calc.MapPoint(x, y);
+					SetPixel(hdc, x, y, co);
+				}
+			}
+			RECT unpaintedRect = ps.rcPaint;
 
-			if (true || dxStep && dyStep)
-			{
-				for (int x = ps.rcPaint.left; x < ps.rcPaint.right; x += dxStep)
-				{
-					for (int y = ps.rcPaint.top; y < ps.rcPaint.bottom; y += dyStep)
-					{
-						auto co = calc.MapPoint(x, y);
-						auto brush = CreateSolidBrush(co);
-						if (brush)
-						{
-							auto old = SelectObject(hdc, brush);
-							Rectangle(hdc, x, y, x + dxStep+1, y + dyStep+1);
-							SelectObject(hdc, old);
-							DeleteObject(brush);
-						}
-						if (dyStep == 0)
-							break;
-					}
-					if (dxStep == 0)
-						break;
-				}
-			}
-			else
-			{
-				auto brush = CreateSolidBrush(RGB(255, 0, 255));
-				if (brush)
-				{
-					auto old = SelectObject(hdc, brush);
-					Rectangle(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right + 1, ps.rcPaint.bottom + 1);
-					SelectObject(hdc, old);
-					DeleteObject(brush);
-				}
-			}
             EndPaint(hWnd, &ps);
+
+			if (xMax < unpaintedRect.right)
+			{
+				unpaintedRect.left = xMax;
+				InvalidateRect(hWnd, &unpaintedRect, false);
+			}
         }
         break;
     case WM_DESTROY:
