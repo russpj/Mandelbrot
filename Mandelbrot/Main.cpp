@@ -169,22 +169,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			SelectObject(hdc, GetStockObject(NULL_PEN));
 
-			for (int x = 0; x < cxWidth; x += dxStep)
+			if (true || dxStep && dyStep)
 			{
-				for (int y = 0; y < cyHeight; y += dyStep)
+				for (int x = ps.rcPaint.left; x < ps.rcPaint.right; x += dxStep)
 				{
-					auto co = calc.MapPoint(x, y);
-					auto brush = CreateSolidBrush(co);
-					if (brush)
+					for (int y = ps.rcPaint.top; y < ps.rcPaint.bottom; y += dyStep)
 					{
-						auto old = SelectObject(hdc, brush);
-						Rectangle(hdc, x, y, x + dxStep+1, y + dyStep+1);
-						SelectObject(hdc, old);
-						DeleteObject(brush);
+						auto co = calc.MapPoint(x, y);
+						auto brush = CreateSolidBrush(co);
+						if (brush)
+						{
+							auto old = SelectObject(hdc, brush);
+							Rectangle(hdc, x, y, x + dxStep+1, y + dyStep+1);
+							SelectObject(hdc, old);
+							DeleteObject(brush);
+						}
+						if (dyStep == 0)
+							break;
 					}
+					if (dxStep == 0)
+						break;
 				}
 			}
-            // TODO: Add any drawing code that uses hdc here...
+			else
+			{
+				auto brush = CreateSolidBrush(RGB(255, 0, 255));
+				if (brush)
+				{
+					auto old = SelectObject(hdc, brush);
+					Rectangle(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right + 1, ps.rcPaint.bottom + 1);
+					SelectObject(hdc, old);
+					DeleteObject(brush);
+				}
+			}
             EndPaint(hWnd, &ps);
         }
         break;
