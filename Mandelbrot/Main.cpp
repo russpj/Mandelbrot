@@ -17,6 +17,10 @@ Complex ulCurrent = Complex(-2.1, 1.2);
 Complex lrCurrent = Complex(0.5, -1.2);
 ComplexMapper mapper(ulCurrent, lrCurrent, 100, 100);
 
+bool fTrackMouse = false;
+POINT ptMouseDown;
+POINT ptMouseUp;
+
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -160,7 +164,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
 			const int dxSlice = 5;
             HDC hdc = BeginPaint(hWnd, &ps);
-			ColorMapper comap(RGB(100, 20, 0), RGB(255, 190, 0), RGB(0, 0, 0), 512);
+			ColorMapper comap(RGB(50, 10, 0), RGB(255, 215, 0), RGB(0, 0, 0), 512);
 			Calculator calc(comap, mapper);
 
 			int xMax = min(ps.rcPaint.left + dxSlice, ps.rcPaint.right);
@@ -183,7 +187,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
         }
         break;
-    case WM_DESTROY:
+	case WM_LBUTTONDOWN:
+		ptMouseDown.x = GET_X_LPARAM(lParam);
+		ptMouseDown.y = GET_Y_LPARAM(lParam);
+		fTrackMouse = true;
+		return DefWindowProc(hWnd, message, wParam, lParam);
+		break;
+	case WM_LBUTTONUP:
+		ptMouseUp.x = GET_X_LPARAM(lParam);
+		ptMouseUp.y = GET_Y_LPARAM(lParam);
+		fTrackMouse = false;
+		{
+			int xUL = min(ptMouseDown.x, ptMouseUp.x);
+			int yUL = min(ptMouseDown.y, ptMouseUp.y);
+			int xLR = max(ptMouseDown.x, ptMouseUp.x);
+			int yLR = max(ptMouseDown.y, ptMouseUp.y);
+			ulCurrent = mapper.Map(xUL, yUL);
+			lrCurrent = mapper.Map(xLR, yLR);
+			RECT rect;
+			GetWindowRect(hWnd, &rect);
+			mapper = ComplexMapper(ulCurrent, lrCurrent, rect.right-rect.left, rect.bottom-rect.top);
+			InvalidateRect(hWnd, NULL, true);
+		}
+		return DefWindowProc(hWnd, message, wParam, lParam);
+		break;
+	case WM_MOUSEMOVE:
+		{
+			POINT pt;
+			pt.x = GET_X_LPARAM(lParam);
+			pt.y = GET_Y_LPARAM(lParam);
+		}
+  		return DefWindowProc(hWnd, message, wParam, lParam);
+		break;
+  case WM_DESTROY:
         PostQuitMessage(0);
         break;
     default:
