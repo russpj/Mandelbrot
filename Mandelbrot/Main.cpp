@@ -13,9 +13,12 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HBITMAP displayBitmap = NULL;
-Complex ulCurrent = Complex(-2.1, 1.2);
-Complex lrCurrent = Complex(0.5, -1.2);
+Complex ulStart = Complex(-2.1, 1.2);
+Complex lrStart = Complex(0.5, -1.2);
+Complex ulCurrent = ulStart;
+Complex lrCurrent = lrStart;
 ComplexMapper mapper(ulCurrent, lrCurrent, 100, 100);
+int levels = 256;
 
 bool fTrackMouse = false;
 POINT ptMouseDown;
@@ -159,12 +162,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+	case WM_CHAR:
+		switch (wParam)
+			{
+			case '+':
+				{
+					RECT rect;
+					GetClientRect(hWnd, &rect);
+					levels = levels * 2;
+					InvalidateRect(hWnd, &rect, false);
+				}
+				break;
+			case '-':
+				{
+					RECT rect;
+					GetClientRect(hWnd, &rect);
+					levels = max(1,levels / 2);
+					InvalidateRect(hWnd, &rect, false);
+				}
+			break;
+			}
+		break;
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
 			const int dxSlice = 5;
             HDC hdc = BeginPaint(hWnd, &ps);
-			ColorMapper comap(RGB(50, 10, 0), RGB(255, 215, 0), RGB(0, 0, 0), 512);
+			ColorMapper comap(RGB(50, 10, 0), RGB(255, 215, 0), RGB(0, 0, 0), levels);
 			Calculator calc(comap, mapper);
 
 			int xMax = min(ps.rcPaint.left + dxSlice, ps.rcPaint.right);
