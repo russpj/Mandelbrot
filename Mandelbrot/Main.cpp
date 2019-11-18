@@ -3,6 +3,13 @@
 
 #include "framework.h"
 #include "Main.h"
+
+#include <sstream>
+using std::wstringstream;
+
+#include <string>
+using std::wstring;
+
 #include "Graphics.h"
 #include "Mandelbrot.h"
 
@@ -21,32 +28,44 @@ struct CalculationState
 	POINT ptMouseUp;
 	HBITMAP displayBitmap = NULL;
 	ComplexMapper mapper;
+	WCHAR const* szTitle;
 
-	void UpdateWindowSize(int width, int height)
+	CalculationState(WCHAR const *szWindowTitle)
+	{
+		szTitle = szWindowTitle;
+	}
+
+	void UpdateWindowSize(HWND hWnd, int width, int height)
 	{
 		mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
+		UpdateWindowTitle(hWnd);
 	}
 
-	void UpdateWindowRange(Complex ul, Complex lr, int width, int height)
+	void UpdateWindowRange(HWND hWnd, Complex ul, Complex lr)
 	{
+		RECT rect;
+		GetClientRect(hWnd, &rect);
 		ulCurrent = ul;
 		lrCurrent = lr;
-		mapper = ComplexMapper(ul, lr, width, height);
+		mapper = ComplexMapper(ul, lr, rect.right - rect.left, rect.bottom - rect.top);
+		UpdateWindowTitle(hWnd);
 	}
 
-	void ResetWindowRange(int width, int height)
+	void ResetWindowRange(HWND hWnd)
 	{
-		UpdateWindowRange(ulStart, lrStart, width, height);
+		UpdateWindowRange(hWnd, ulStart, lrStart);
 	}
 
-	void IncreaseLevels()
+	void IncreaseLevels(HWND hWnd)
 	{
 		levels = levels*2;
+		UpdateWindowTitle(hWnd);
 	}
 
-	void DecreaseLevels()
+	void DecreaseLevels(HWND hWnd)
 	{
 		levels = max(1, levels / 2);
+		UpdateWindowTitle(hWnd);
 	}
 
 	void StartTracking(LPARAM lParam)
@@ -56,7 +75,7 @@ struct CalculationState
 		fTrackMouse = true;
 	}
 
-	void EndTracking(LPARAM lParam, int width, int height)
+	void EndTracking(HWND hWnd, LPARAM lParam, int width, int height)
 	{
 		ptMouseUp.x = GET_X_LPARAM(lParam);
 		ptMouseUp.y = GET_Y_LPARAM(lParam);
@@ -68,6 +87,17 @@ struct CalculationState
 		ulCurrent = mapper.Map(xUL, yUL);
 		lrCurrent = mapper.Map(xLR, yLR);
 		mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
+		UpdateWindowTitle(hWnd);
+	}
+
+	void UpdateWindowTitle(HWND hWnd)
+	{
+		wstringstream str;
+		str << szTitle;
+		str << ' ';
+		str << levels << " Levels";
+		wstring title = str.str();
+		SetWindowText(hWnd, title.c_str());
 	}
 };
 
@@ -75,7 +105,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
-CalculationState state;
+CalculationState state(szTitle);
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -195,7 +225,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			int width = LOWORD(lParam);
 			int height = HIWORD(lParam);
-			state.UpdateWindowSize(width, height);
+			state.UpdateWindowSize(hWnd, width, height);
 		}
 		break;
     case WM_COMMAND:
@@ -222,7 +252,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				RECT rect;
 				GetClientRect(hWnd, &rect);
-				state.ResetWindowRange(rect.right - rect.left, rect.bottom - rect.top);
+				state.ResetWindowRange(hWnd);
 
 				InvalidateRect(hWnd, &rect, false);
 			}
@@ -231,7 +261,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				RECT rect;
 				GetClientRect(hWnd, &rect);
-				state.IncreaseLevels();
+				state.IncreaseLevels(hWnd);
 				InvalidateRect(hWnd, &rect, false);
 			}
 			break;
@@ -239,7 +269,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				RECT rect;
 				GetClientRect(hWnd, &rect);
-				state.DecreaseLevels();
+				state.DecreaseLevels(hWnd);
 				InvalidateRect(hWnd, &rect, false);
 			}
 			break;
@@ -281,7 +311,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			RECT rect;
 			GetClientRect(hWnd, &rect);
-			state.EndTracking(lParam, rect.right-rect.left, rect.bottom-rect.top);
+			state.EndTracking(hWnd, lParam, rect.right-rect.left, rect.bottom-rect.top);
 			InvalidateRect(hWnd, NULL, true);
 		}
 		return DefWindowProc(hWnd, message, wParam, lParam);
