@@ -94,8 +94,9 @@ struct CalculationState
 	{
 		wstringstream str;
 		str << szTitle;
-		str << ' ';
-		str << levels << " Levels";
+		str << ": ";
+		str << levels << " Levels ";
+		str << ulCurrent << 'X' << lrCurrent;
 		wstring title = str.str();
 		SetWindowText(hWnd, title.c_str());
 	}
