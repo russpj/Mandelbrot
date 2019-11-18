@@ -14,6 +14,7 @@ HBITMAP CreateGraphicalBitmap(HDC hdc, int width, int height);
 class ComplexMapper
 {
 public:
+	ComplexMapper() = default;
 	ComplexMapper(Complex ulIn, Complex lrIn, int widthIn, int heightIn) :
 		ulOriginal(ulIn),
 		lrOriginal(lrIn),

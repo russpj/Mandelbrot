@@ -61,6 +61,6 @@ ColorMapper::ColorMapper(COLORREF coMin, COLORREF coMax, COLORREF coLast, int le
 		COLORREF co = InterpolateColors(coMin, coMax, iter, levels);
 		map.push_back(co);
 	}
-	map.push_back(RGB(0, 0, 0));
+	map.push_back(coLast);
 }
 

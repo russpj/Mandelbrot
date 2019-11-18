@@ -6,23 +6,76 @@
 #include "Graphics.h"
 #include "Mandelbrot.h"
 
-#define MAX_LOADSTRING 100
+#define MAX_LOADSTRING 1000
 
 // Global Variables:
+struct CalculationState
+{
+	Complex ulStart = Complex(-2.1, 1.2);
+	Complex lrStart = Complex(0.6, -1.2);
+	Complex ulCurrent = ulStart;
+	Complex lrCurrent = lrStart;
+	int levels = 256;
+	bool fTrackMouse = false;
+	POINT ptMouseDown;
+	POINT ptMouseUp;
+	HBITMAP displayBitmap = NULL;
+	ComplexMapper mapper;
+
+	void UpdateWindowSize(int width, int height)
+	{
+		mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
+	}
+
+	void UpdateWindowRange(Complex ul, Complex lr, int width, int height)
+	{
+		ulCurrent = ul;
+		lrCurrent = lr;
+		mapper = ComplexMapper(ul, lr, width, height);
+	}
+
+	void ResetWindowRange(int width, int height)
+	{
+		UpdateWindowRange(ulStart, lrStart, width, height);
+	}
+
+	void IncreaseLevels()
+	{
+		levels = levels*2;
+	}
+
+	void DecreaseLevels()
+	{
+		levels = max(1, levels / 2);
+	}
+
+	void StartTracking(LPARAM lParam)
+	{
+		ptMouseDown.x = GET_X_LPARAM(lParam);
+		ptMouseDown.y = GET_Y_LPARAM(lParam);
+		fTrackMouse = true;
+	}
+
+	void EndTracking(LPARAM lParam, int width, int height)
+	{
+		ptMouseUp.x = GET_X_LPARAM(lParam);
+		ptMouseUp.y = GET_Y_LPARAM(lParam);
+		fTrackMouse = false;
+		int xUL = min(ptMouseDown.x, ptMouseUp.x);
+		int yUL = min(ptMouseDown.y, ptMouseUp.y);
+		int xLR = max(ptMouseDown.x, ptMouseUp.x);
+		int yLR = max(ptMouseDown.y, ptMouseUp.y);
+		ulCurrent = mapper.Map(xUL, yUL);
+		lrCurrent = mapper.Map(xLR, yLR);
+		mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
+	}
+};
+
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-HBITMAP displayBitmap = NULL;
-Complex ulStart = Complex(-2.1, 1.2);
-Complex lrStart = Complex(0.5, -1.2);
-Complex ulCurrent = ulStart;
-Complex lrCurrent = lrStart;
-ComplexMapper mapper(ulCurrent, lrCurrent, 100, 100);
-int levels = 256;
 
-bool fTrackMouse = false;
-POINT ptMouseDown;
-POINT ptMouseUp;
+CalculationState state;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -142,7 +195,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			int width = LOWORD(lParam);
 			int height = HIWORD(lParam);
-			mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
+			state.UpdateWindowSize(width, height);
 		}
 		break;
     case WM_COMMAND:
@@ -164,32 +217,41 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 	case WM_CHAR:
 		switch (wParam)
+		{
+			case '0':
 			{
-			case '+':
-				{
-					RECT rect;
-					GetClientRect(hWnd, &rect);
-					levels = levels * 2;
-					InvalidateRect(hWnd, &rect, false);
-				}
-				break;
-			case '-':
-				{
-					RECT rect;
-					GetClientRect(hWnd, &rect);
-					levels = max(1,levels / 2);
-					InvalidateRect(hWnd, &rect, false);
-				}
-			break;
+				RECT rect;
+				GetClientRect(hWnd, &rect);
+				state.ResetWindowRange(rect.right - rect.left, rect.bottom - rect.top);
+
+				InvalidateRect(hWnd, &rect, false);
 			}
+			break;
+		case '+':
+			{
+				RECT rect;
+				GetClientRect(hWnd, &rect);
+				state.IncreaseLevels();
+				InvalidateRect(hWnd, &rect, false);
+			}
+			break;
+		case '-':
+			{
+				RECT rect;
+				GetClientRect(hWnd, &rect);
+				state.DecreaseLevels();
+				InvalidateRect(hWnd, &rect, false);
+			}
+			break;
+		}
 		break;
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
-			const int dxSlice = 5;
+			const int dxSlice = 1;
             HDC hdc = BeginPaint(hWnd, &ps);
-			ColorMapper comap(RGB(50, 10, 0), RGB(255, 215, 0), RGB(0, 0, 0), levels);
-			Calculator calc(comap, mapper);
+			ColorMapper comap(RGB(50, 10, 0), RGB(255, 215, 0), RGB(0, 0, 0), state.levels);
+			Calculator calc(comap, state.mapper);
 
 			int xMax = min(ps.rcPaint.left + dxSlice, ps.rcPaint.right);
 			for (int x = ps.rcPaint.left; x < xMax; x++)
@@ -212,25 +274,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
 	case WM_LBUTTONDOWN:
-		ptMouseDown.x = GET_X_LPARAM(lParam);
-		ptMouseDown.y = GET_Y_LPARAM(lParam);
-		fTrackMouse = true;
+		state.StartTracking(lParam);
 		return DefWindowProc(hWnd, message, wParam, lParam);
 		break;
 	case WM_LBUTTONUP:
-		ptMouseUp.x = GET_X_LPARAM(lParam);
-		ptMouseUp.y = GET_Y_LPARAM(lParam);
-		fTrackMouse = false;
 		{
-			int xUL = min(ptMouseDown.x, ptMouseUp.x);
-			int yUL = min(ptMouseDown.y, ptMouseUp.y);
-			int xLR = max(ptMouseDown.x, ptMouseUp.x);
-			int yLR = max(ptMouseDown.y, ptMouseUp.y);
-			ulCurrent = mapper.Map(xUL, yUL);
-			lrCurrent = mapper.Map(xLR, yLR);
 			RECT rect;
-			GetWindowRect(hWnd, &rect);
-			mapper = ComplexMapper(ulCurrent, lrCurrent, rect.right-rect.left, rect.bottom-rect.top);
+			GetClientRect(hWnd, &rect);
+			state.EndTracking(lParam, rect.right-rect.left, rect.bottom-rect.top);
 			InvalidateRect(hWnd, NULL, true);
 		}
 		return DefWindowProc(hWnd, message, wParam, lParam);
