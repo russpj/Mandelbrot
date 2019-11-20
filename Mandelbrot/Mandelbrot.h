@@ -1,6 +1,8 @@
 #pragma once
 #include "framework.h"
 
+#include <vector>
+
 #include "Graphics.h"
 
 class Calculator
@@ -12,6 +14,7 @@ public:
 	}
 
 	COLORREF MapPoint(int x, int y);
+	std::vector<COLORREF> MapPoints(int x, int yMin, int yMax);
 
 private:
 	ColorMapper comap;

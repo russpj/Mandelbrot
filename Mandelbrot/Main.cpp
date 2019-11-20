@@ -10,6 +10,9 @@ using std::wstringstream;
 #include <string>
 using std::wstring;
 
+#include <stack>
+using std::stack;
+
 #include "Graphics.h"
 #include "Mandelbrot.h"
 
@@ -33,6 +36,9 @@ struct CalculationState
 	CalculationState(WCHAR const *szWindowTitle)
 	{
 		szTitle = szWindowTitle;
+		ptMouseDown.x = 0;
+		ptMouseDown.y = 0;
+		ptMouseUp = ptMouseDown;
 	}
 
 	void UpdateWindowSize(HWND hWnd, int width, int height)
@@ -75,19 +81,27 @@ struct CalculationState
 		fTrackMouse = true;
 	}
 
-	void EndTracking(HWND hWnd, LPARAM lParam, int width, int height)
+	void EndTracking(HWND hWnd, LPARAM lParam)
 	{
-		ptMouseUp.x = GET_X_LPARAM(lParam);
-		ptMouseUp.y = GET_Y_LPARAM(lParam);
+		if (fTrackMouse)
+		{
+			ptMouseUp.x = GET_X_LPARAM(lParam);
+			ptMouseUp.y = GET_Y_LPARAM(lParam);
+			fTrackMouse = false;
+			int xUL = min(ptMouseDown.x, ptMouseUp.x);
+			int yUL = min(ptMouseDown.y, ptMouseUp.y);
+			int xLR = max(ptMouseDown.x, ptMouseUp.x);
+			int yLR = max(ptMouseDown.y, ptMouseUp.y);
+			auto ul = mapper.Map(xUL, yUL);
+			auto lr = mapper.Map(xLR, yLR);
+
+			UpdateWindowRange(hWnd, ul, lr);
+		}
+	}
+
+	void ClearTracking()
+	{
 		fTrackMouse = false;
-		int xUL = min(ptMouseDown.x, ptMouseUp.x);
-		int yUL = min(ptMouseDown.y, ptMouseUp.y);
-		int xLR = max(ptMouseDown.x, ptMouseUp.x);
-		int yLR = max(ptMouseDown.y, ptMouseUp.y);
-		ulCurrent = mapper.Map(xUL, yUL);
-		lrCurrent = mapper.Map(xLR, yLR);
-		mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
-		UpdateWindowTitle(hWnd);
 	}
 
 	void UpdateWindowTitle(HWND hWnd)
@@ -100,6 +114,8 @@ struct CalculationState
 		wstring title = str.str();
 		SetWindowText(hWnd, title.c_str());
 	}
+
+	static stack<CalculationState> undoStack;
 };
 
 HINSTANCE hInst;                                // current instance
@@ -287,10 +303,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			int xMax = min(ps.rcPaint.left + dxSlice, ps.rcPaint.right);
 			for (int x = ps.rcPaint.left; x < xMax; x++)
 			{
+				auto pixels = calc.MapPoints(x, ps.rcPaint.top, ps.rcPaint.bottom);
+
 				for (int y = ps.rcPaint.top; y < ps.rcPaint.bottom; y++)
 				{
-					auto co = calc.MapPoint(x, y);
-					SetPixel(hdc, x, y, co);
+					SetPixel(hdc, x, y, pixels[y - ps.rcPaint.top]);
 				}
 			}
 			RECT unpaintedRect = ps.rcPaint;
@@ -309,12 +326,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hWnd, message, wParam, lParam);
 		break;
 	case WM_LBUTTONUP:
-		{
-			RECT rect;
-			GetClientRect(hWnd, &rect);
-			state.EndTracking(hWnd, lParam, rect.right-rect.left, rect.bottom-rect.top);
-			InvalidateRect(hWnd, NULL, true);
-		}
+		state.EndTracking(hWnd, lParam);
+		InvalidateRect(hWnd, NULL, true);
 		return DefWindowProc(hWnd, message, wParam, lParam);
 		break;
 	case WM_MOUSEMOVE:
