@@ -43,12 +43,14 @@ struct CalculationState
 
 	void UpdateWindowSize(HWND hWnd, int width, int height)
 	{
+		PushState();
 		mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
 		UpdateWindowTitle(hWnd);
 	}
 
 	void UpdateWindowRange(HWND hWnd, Complex ul, Complex lr)
 	{
+		PushState();
 		RECT rect;
 		GetClientRect(hWnd, &rect);
 		ulCurrent = ul;
@@ -64,12 +66,14 @@ struct CalculationState
 
 	void IncreaseLevels(HWND hWnd)
 	{
+		PushState();
 		levels = levels*2;
 		UpdateWindowTitle(hWnd);
 	}
 
 	void DecreaseLevels(HWND hWnd)
 	{
+		PushState();
 		levels = max(1, levels / 2);
 		UpdateWindowTitle(hWnd);
 	}
@@ -115,14 +119,32 @@ struct CalculationState
 		SetWindowText(hWnd, title.c_str());
 	}
 
+	void PushState()
+	{
+		undoStack.push(*this);
+	}
+
+	void Undo()
+	{
+		if (!undoStack.empty())
+		{
+			*this = undoStack.top();
+			undoStack.pop();
+		}
+	}
+
+private:
 	static stack<CalculationState> undoStack;
 };
+
+stack<CalculationState> CalculationState::undoStack;
 
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 CalculationState state(szTitle);
+
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -290,9 +312,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				InvalidateRect(hWnd, &rect, false);
 			}
 			break;
+		case 'z':
+			state.Undo();
+			InvalidateRect(hWnd, NULL, false);
+			break;
 		}
 		break;
-    case WM_PAINT:
+	case WM_LBUTTONDOWN:
+		state.StartTracking(lParam);
+		return DefWindowProc(hWnd, message, wParam, lParam);
+		break;
+	case WM_LBUTTONUP:
+		state.EndTracking(hWnd, lParam);
+		InvalidateRect(hWnd, NULL, true);
+		return DefWindowProc(hWnd, message, wParam, lParam);
+		break;
+	case WM_MOUSEMOVE:
+	{
+		POINT pt;
+		pt.x = GET_X_LPARAM(lParam);
+		pt.y = GET_Y_LPARAM(lParam);
+	}
+	return DefWindowProc(hWnd, message, wParam, lParam);
+	break;
+	case WM_PAINT:
         {
             PAINTSTRUCT ps;
 			const int dxSlice = 1;
@@ -321,23 +364,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
         }
         break;
-	case WM_LBUTTONDOWN:
-		state.StartTracking(lParam);
-		return DefWindowProc(hWnd, message, wParam, lParam);
-		break;
-	case WM_LBUTTONUP:
-		state.EndTracking(hWnd, lParam);
-		InvalidateRect(hWnd, NULL, true);
-		return DefWindowProc(hWnd, message, wParam, lParam);
-		break;
-	case WM_MOUSEMOVE:
-		{
-			POINT pt;
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
-		}
-  		return DefWindowProc(hWnd, message, wParam, lParam);
-		break;
   case WM_DESTROY:
         PostQuitMessage(0);
         break;
