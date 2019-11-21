@@ -43,7 +43,6 @@ struct CalculationState
 
 	void UpdateWindowSize(HWND hWnd, int width, int height)
 	{
-		PushState();
 		mapper = ComplexMapper(ulCurrent, lrCurrent, width, height);
 		UpdateWindowTitle(hWnd);
 	}
@@ -124,13 +123,16 @@ struct CalculationState
 		undoStack.push(*this);
 	}
 
-	void Undo()
+	bool Undo(HWND hWnd)
 	{
 		if (!undoStack.empty())
 		{
 			*this = undoStack.top();
 			undoStack.pop();
+			UpdateWindowTitle(hWnd);
+			return true;
 		}
+		return false;
 	}
 
 private:
@@ -322,8 +324,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			auto key = GetKeyState(VK_CONTROL);
 			if (key & 0x8000)
 			{
-				state.Undo();
-				InvalidateRect(hWnd, NULL, false);
+				if (state.Undo(hWnd))
+					InvalidateRect(hWnd, NULL, false);
 			}
 			break;
 		}
