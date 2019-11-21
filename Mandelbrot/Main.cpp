@@ -312,10 +312,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				InvalidateRect(hWnd, &rect, false);
 			}
 			break;
-		case 'z':
-			state.Undo();
-			InvalidateRect(hWnd, NULL, false);
+		}
+		break;
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case 'Z':
+		{
+			auto key = GetKeyState(VK_CONTROL);
+			if (key & 0x8000)
+			{
+				state.Undo();
+				InvalidateRect(hWnd, NULL, false);
+			}
 			break;
+		}
 		}
 		break;
 	case WM_LBUTTONDOWN:
