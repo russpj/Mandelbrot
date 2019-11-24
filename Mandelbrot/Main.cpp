@@ -351,28 +351,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
         {
             PAINTSTRUCT ps;
-			const int dxSlice = 1;
+			const int dySlice = 1;
             HDC hdc = BeginPaint(hWnd, &ps);
 			ColorMapper comap(RGB(40, 5, 35), RGB(255, 215, 0), RGB(0, 0, 0), state.levels);
 			Calculator calc(comap, state.mapper);
 
-			int xMax = min(ps.rcPaint.left + dxSlice, ps.rcPaint.right);
-			for (int x = ps.rcPaint.left; x < xMax; x++)
+			int yMax = min(ps.rcPaint.top + dySlice, ps.rcPaint.bottom);
+			for (int y = ps.rcPaint.top; y < yMax; y++)
 			{
-				auto pixels = calc.MapPoints(x, ps.rcPaint.top, ps.rcPaint.bottom);
+				auto pixels = calc.MapPoints(y, ps.rcPaint.left, ps.rcPaint.right);
 
-				for (int y = ps.rcPaint.top; y < ps.rcPaint.bottom; y++)
+				for (int x = ps.rcPaint.left; x < ps.rcPaint.right; x++)
 				{
-					SetPixel(hdc, x, y, pixels[y - ps.rcPaint.top]);
+					SetPixel(hdc, x, y, pixels[x - ps.rcPaint.left]);
 				}
 			}
 			RECT unpaintedRect = ps.rcPaint;
 
             EndPaint(hWnd, &ps);
 
-			if (xMax < unpaintedRect.right)
+			if (yMax < unpaintedRect.bottom)
 			{
-				unpaintedRect.left = xMax;
+				unpaintedRect.top = yMax;
 				InvalidateRect(hWnd, &unpaintedRect, false);
 			}
         }

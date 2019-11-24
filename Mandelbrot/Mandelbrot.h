@@ -14,7 +14,9 @@ public:
 	}
 
 	COLORREF MapPoint(int x, int y);
-	std::vector<COLORREF> MapPoints(int x, int yMin, int yMax);
+	std::vector<COLORREF> MapPoints(int y, int xMin, int xMax);
+
+	HBITMAP MapPoints(HDC hdc, RECT rect);
 
 private:
 	ColorMapper comap;
