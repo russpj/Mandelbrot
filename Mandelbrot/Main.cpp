@@ -353,7 +353,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
 			const int dxSlice = 1;
             HDC hdc = BeginPaint(hWnd, &ps);
-			ColorMapper comap(RGB(50, 10, 0), RGB(255, 215, 0), RGB(0, 0, 0), state.levels);
+			ColorMapper comap(RGB(40, 5, 35), RGB(255, 215, 0), RGB(0, 0, 0), state.levels);
 			Calculator calc(comap, state.mapper);
 
 			int xMax = min(ps.rcPaint.left + dxSlice, ps.rcPaint.right);
