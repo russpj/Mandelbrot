@@ -1,5 +1,6 @@
 #include "framework.h"
 #include "Mandelbrot.h"
+#include <assert.h>
 #include <algorithm>
 
 using std::vector;
@@ -34,6 +35,7 @@ COLORREF Calculator::MapPoint(int x, int y)
 	return comap.Map(ValueMandelbrot(point, comap.size()));
 }
 
+// Since windows bitmaps appear to work in row major order, so should this
 vector<COLORREF> Calculator::MapPoints(int y, int xMin, int xMax)
 {
 	vector<COLORREF> results;
@@ -43,6 +45,37 @@ vector<COLORREF> Calculator::MapPoints(int y, int xMin, int xMax)
 	}
 	return results;
 }
+
+struct BitmapBits
+{
+	LPBYTE bits;
+	int bytesWrittenInRow = 0;
+	int bytesPerColor;
+
+	BitmapBits(LPBYTE bitsIn, int bytesPerColorIn) : 
+		bits(bitsIn), 
+		bytesPerColor(bytesPerColorIn)
+	{
+		GdiFlush();
+	}
+
+	void WriteColor(COLORREF color)
+	{
+		assert(bytesPerColor == 3 || bytesPerColor == 4);
+
+		*bits++ = GetRValue(color);
+		*bits++ = GetGValue(color);
+		*bits++ = GetBValue(color);
+		bytesWrittenInRow += (bytesPerColor == 3) ? 3 : 4;
+	}
+
+	void EndScanLine()
+	{
+		if (bytesWrittenInRow % 2)
+			*bits++ = 0;
+		bytesWrittenInRow = 0;
+	}
+};
 
 HBITMAP Calculator::MapPoints(HDC hdc, RECT rect)
 {
@@ -60,10 +93,16 @@ HBITMAP Calculator::MapPoints(HDC hdc, RECT rect)
 
 	HBITMAP hbm = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, reinterpret_cast<void **>(&pBits), NULL, 0);
 
-	for (auto x = rect.left; x < rect.right + 1; x++)
+
+	if (hbm)
 	{
-		auto colors = MapPoints(x, rect.top, rect.bottom);
+		for (auto y = rect.top; y < rect.bottom; y++)
+		{
+			auto colors = MapPoints(y, rect.left, rect.right);
+
+		}
 	}
+
 	return hbm;
 }
 
