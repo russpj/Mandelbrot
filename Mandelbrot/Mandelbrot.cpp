@@ -62,11 +62,15 @@ struct BitmapBits
 	void WriteColor(COLORREF color)
 	{
 		assert(bytesPerColor == 3 || bytesPerColor == 4);
-
+		LPBYTE start = bits;
 		*bits++ = GetRValue(color);
 		*bits++ = GetGValue(color);
 		*bits++ = GetBValue(color);
-		bytesWrittenInRow += (bytesPerColor == 3) ? 3 : 4;
+		if (bytesPerColor == 4)
+		{
+			*bits++ = 0;
+		}
+		bytesWrittenInRow += (bits - start);
 	}
 
 	void EndScanLine()
